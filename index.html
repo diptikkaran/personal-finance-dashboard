@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Personal Finance Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <h1>🏦 Personal Finance Dashboard</h1>
+    <nav>
+      <a href="#" onclick="showLogin()">Login</a>
+      <a href="#" onclick="showRegister()">Register</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- LOGIN -->
+    <section id="loginForm" class="card">
+      <h2>Login</h2>
+      <div class="grid">
+        <input type="text" id="loginUsername" placeholder="Username" />
+        <input type="password" id="loginPassword" placeholder="Password" />
+        <select id="role">
+          <option value="admin">Admin</option>
+          <option value="employee">Employee</option>
+          <option value="customer">Customer</option>
+        </select>
+      </div>
+      <button class="primary" onclick="login()">Login</button>
+    </section>
+
+    <!-- REGISTER (Customer) -->
+    <section id="registerForm" class="card">
+      <h2>Customer Registration</h2>
+      <div class="grid">
+        <input type="text" id="regName" placeholder="Full Name (username)" />
+        <input type="email" id="regEmail" placeholder="Email" />
+        <input type="tel" id="regPhone" placeholder="Phone" />
+      </div>
+      <button class="primary" onclick="registerCustomer()">Register</button>
+      <p class="hint">After registering, an employee with activation role will activate your account.</p>
+    </section>
+
+    <!-- ADMIN DASHBOARD -->
+    <section id="adminDashboard" class="card">
+      <h2>Admin Dashboard</h2>
+
+      <!-- Totals at top -->
+      <div class="stats">
+        <div class="stat"><span>Total Deposit</span><strong id="adminTotalDeposit">₹0</strong></div>
+        <div class="stat"><span>Total Withdraw</span><strong id="adminTotalWithdraw">₹0</strong></div>
+        <div class="stat"><span>Net Balance</span><strong id="adminNetBalance">₹0</strong></div>
+      </div>
+
+      <!-- Create Employee -->
+      <h3>Create Employee (assign sub-role)</h3>
+      <div class="grid">
+        <input type="text" id="newEmpUsername" placeholder="Employee Username" />
+        <input type="password" id="newEmpPassword" placeholder="Employee Password" />
+      </div>
+      <label for="newEmpRole">Sub-Role:</label>
+      <select id="newEmpRole">
+        <option value="activate">activate_customer</option>
+        <option value="approve">approve_request</option>
+      </select>
+      <div style="margin-top:10px;">
+        <button class="primary" onclick="createEmployee()">Create Employee</button>
+      </div>
+
+      <!-- Reset Employee Password -->
+      <h3 style="margin-top:16px;">Reset Employee Password</h3>
+      <div class="grid">
+        <input type="text" id="reUsername" placeholder="Employee Username" />
+        <input type="password" id="reNewPassword" placeholder="New Password" />
+      </div>
+      <button onclick="resetEmployeePassword()">Reset Password</button>
+
+      <!-- Manage Employees -->
+      <h3 style="margin-top:16px;">Existing Employees</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Sub-Role</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="employeeList"></tbody>
+        </table>
+      </div>
+
+      <!-- All Transactions -->
+      <h3 style="margin-top:16px;">All Daily Transactions</h3>
+      <label class="inline">Filter by Date: <input type="date" id="adminFilterDate"
+          onchange="filterAdminTransactions()" /></label>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Txn ID</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Processed By</th>
+            </tr>
+          </thead>
+          <tbody id="adminTransactionTable"></tbody>
+        </table>
+      </div>
+
+      <div class="section-end">
+        <button class="danger" onclick="logout()">Logout</button>
+      </div>
+    </section>
+
+    <!-- EMPLOYEE DASHBOARD -->
+    <section id="employeeDashboard" class="card">
+      <h2>Employee Dashboard (<span id="empSubRoleLabel">-</span>)</h2>
+
+      <!-- Reset Customer Password -->
+      <h3>Reset Customer Password</h3>
+      <div class="grid">
+        <input type="text" id="rcUsername" placeholder="Customer Username" />
+        <input type="password" id="rcNewPassword" placeholder="New Password" />
+      </div>
+      <button onclick="resetCustomerPassword()">Reset Password</button>
+
+      <!-- Activate customers area (only for activate sub-role) -->
+      <div id="activateArea" style="margin-top:18px; display:none;">
+        <h3>Pending Customers (Activate)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pendingCustomersTable"></tbody>
+          </table>
+        </div>
+
+        <h4 style="margin-top:12px;">Quick Activate (manual)</h4>
+        <div class="grid">
+          <input type="text" id="empActivateUsername" placeholder="Pending Customer Username" />
+          <input type="password" id="empActivatePassword" placeholder="Set Customer Password" />
+        </div>
+        <button class="primary" onclick="activateCustomer()">Activate</button>
+
+        <h3 style="margin-top:16px;">Manage Active Customers</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Balance</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="employeeCustomerList"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Approve requests area (only for approve sub-role) -->
+      <div id="approveArea" style="margin-top:18px; display:none;">
+        <h3>Pending Deposit / Withdrawal Requests</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pendingRequestsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- All transactions available to employees -->
+      <h3 style="margin-top:18px;">All Daily Transactions</h3>
+      <label class="inline">Filter by Date: <input type="date" id="filterDate"
+          onchange="filterTransactions()" /></label>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Txn ID</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Processed By</th>
+            </tr>
+          </thead>
+          <tbody id="transactionTable"></tbody>
+        </table>
+      </div>
+
+      <div class="section-end">
+        <button class="danger" onclick="logout()">Logout</button>
+      </div>
+    </section>
+
+    <!-- CUSTOMER DASHBOARD -->
+    <section id="customerDashboard" class="card">
+      <h2>Welcome, <span id="customerName"></span></h2>
+      <p class="balance">Balance: <strong id="customerBalance">₹0</strong></p>
+
+      <h3>Request Deposit</h3>
+      <div class="grid">
+        <input type="number" id="reqDepositAmount" placeholder="Amount" />
+        <input type="text" id="reqDepositNote" placeholder="Note (optional)" />
+      </div>
+      <button class="primary" onclick="requestDeposit()">Submit Deposit Request</button>
+
+      <h3>Request Withdrawal</h3>
+      <div class="grid">
+        <input type="number" id="reqWithdrawAmount" placeholder="Amount" />
+        <input type="text" id="reqWithdrawNote" placeholder="Note (optional)" />
+      </div>
+      <button onclick="requestWithdrawal()">Submit Withdrawal Request</button>
+
+      <h3>My Requests</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Req ID</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Handled By</th>
+            </tr>
+          </thead>
+          <tbody id="customerRequestsTable"></tbody>
+        </table>
+      </div>
+
+      <h3>My Transactions</h3>
+      <label class="inline">Filter by Date: <input type="date" id="customerFilterDate"
+          onchange="filterCustomerTransactions()" /></label>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Txn ID</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Processed By</th>
+            </tr>
+          </thead>
+          <tbody id="customerTransactions"></tbody>
+        </table>
+      </div>
+
+      <div class="section-end">
+        <button class="danger" onclick="logout()">Logout</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Personal Finance Dashboard</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
